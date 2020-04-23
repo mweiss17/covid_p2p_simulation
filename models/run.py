@@ -18,9 +18,9 @@ from joblib import Parallel, delayed
 
 parser = argparse.ArgumentParser(description='Run Risk Models and Plot results')
 parser.add_argument('--plot_path', type=str, default="output/plots/risk/")
-parser.add_argument('--data_path', type=str, default="output/data.pkl")
+parser.add_argument('--data_path', type=str, default="output/data.zip")
 parser.add_argument('--cluster_path', type=str, default="output/clusters.json")
-parser.add_argument('--output_file', type=str, default='output/output.pkl')
+parser.add_argument('--output_dir', type=str, default=None, help="Defaults to the containing directory of --data_path")
 parser.add_argument('--plot_daily', action="store_true")
 parser.add_argument('--risk_model', type=str, default="tristan", choices=['yoshua', 'lenka', 'eilif', 'tristan'])
 parser.add_argument('--seed', type=int, default="0")
@@ -203,6 +203,8 @@ def get_days_worth_of_logs(data_path, start, start_pkl, cur_day):
 def main(args=None):
     if args is None:
         args = parser.parse_args()
+    if args.output_dir is None:
+        args.output_dir = os.path.dirname(args.data_path)
     rng = np.random.RandomState(args.seed)
 
     # check that the plot_dir exists:
@@ -264,7 +266,7 @@ def main(args=None):
         all_params = []
         for human in hd.values():
             encounters = days_logs[human.name]
-            log_path = f'{os.path.dirname(args.data_path)}/daily_outputs/{current_day}/{human.name[6:]}/'
+            log_path = os.path.join(args.output_dir, f'daily_outputs/{current_day}/{human.name[6:]}/')
             all_params.append({"start": start, "current_day": current_day, "encounters": encounters, "rng": rng, "all_possible_symptoms": all_possible_symptoms, "human": human.__dict__, "save_training_data": args.save_training_data, "log_path": log_path, "random_clusters": args.random_clusters})
             # go about your day accruing encounters and clustering them
             for encounter in encounters:

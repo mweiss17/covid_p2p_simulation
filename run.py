@@ -130,7 +130,6 @@ def model():
     m_main()
 
 
-@simu.command()
 def test():
     import unittest
     loader = unittest.TestLoader()
@@ -174,7 +173,9 @@ def run_simu(n_people=None, init_percent_sick=0,
 
 
 if __name__ == "__main__":
-    if sys.argv[1] == "model":
+    if len(sys.argv) > 1 and sys.argv[1] == "model":
         model()
+    elif len(sys.argv) > 1 and sys.argv[1] == "test":
+        test()
     else:
         simu()

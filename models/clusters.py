@@ -45,7 +45,7 @@ class Clusters:
         for i in range(current_day-3, current_day+1):
             for cluster_id, messages in self.clusters_by_day[i].items():
                 for m_enc in messages:
-                    obs_uid, risk, day, unobs_uid = decode_message(m_enc)
+                    obs_uid, _, risk, day, unobs_uid = decode_message(m_enc)
                     if m_new.uid == obs_uid and m_new.day == day:
                         best_cluster = cluster_id
                         best_message = m_enc

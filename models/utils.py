@@ -2,12 +2,12 @@ import datetime
 import numpy as np
 from collections import namedtuple
 
-Message = namedtuple('message', 'uid risk day unobs_id')
+Message = namedtuple('message', 'uid new_risk risk day unobs_id')
 UpdateMessage = namedtuple('update_message', 'uid new_risk risk day received_at unobs_id')
 
 def encode_message(message):
 	# encode a contact message as a string
-	return str(message.uid) + "_" + str(message.risk) + "_" + str(message.day)  + "_" + str(message.unobs_id)
+	return str(message.uid) + "_" + str(message.new_risk) + "_" + str(message.risk) + "_" + str(message.day)  + "_" + str(message.unobs_id)
 
 def encode_update_message(message):
 	# encode a contact message as a string
@@ -15,12 +15,13 @@ def encode_update_message(message):
 
 def decode_message(message):
 	# decode a string-encoded message into a tuple
-	uid, risk, day, unobs_id = message.split("_")
+	uid, new_risk, risk, day, unobs_id = message.split("_")
 	obs_uid = int(uid)
+	new_risk = int(new_risk)
 	risk = int(risk)
 	day = int(day)
 	unobs_uid = unobs_id
-	return Message(obs_uid, risk, day, unobs_uid)
+	return Message(obs_uid, new_risk, risk, day, unobs_uid)
 
 def decode_update_message(update_message):
 	# decode a string-encoded message into a tuple

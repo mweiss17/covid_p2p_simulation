@@ -222,7 +222,8 @@ def main(args=None):
         start_logs = pickle.load(zf.open(zf.namelist()[0], 'r'))
         end_logs = pickle.load(zf.open(zf.namelist()[-1], 'r'))
         start = start_logs[0]['time']
-        end = end_logs[-1]['time']
+        # Complete the day
+        end = end_logs[-1]['time'] + datetime.timedelta(hours=23, minutes=59)
         total_days = (end - start).days
         all_params = []
         for idx, pkl in enumerate(zf.namelist()):
@@ -255,13 +256,10 @@ def main(args=None):
 
     with zipfile.ZipFile(args.data_path, 'r') as zf:
         start_pkl = zf.namelist()[0]
-    for current_day in range(total_days):
-        if args.max_num_days <= current_day:
-            break
 
-        print(f"day {current_day} of {total_days}")
+    for current_day in range(min(total_days, args.max_num_days)):
+        print(f"day {current_day + 1} of {total_days}")
         days_logs, start_pkl = get_days_worth_of_logs(args.data_path, start, start_pkl, current_day)
-        start1 = time.time()
 
         all_params = []
         for human in hd.values():

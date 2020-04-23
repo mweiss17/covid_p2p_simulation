@@ -42,7 +42,8 @@ class DummyHuman:
 
     def cur_message(self, day, RiskModel):
         """creates the current message for this user"""
-        message = Message(self.uid, RiskModel.quantize_risk(self.risk), day, self.name)
+        risk = RiskModel.quantize_risk(self.risk)
+        message = Message(self.uid, risk, risk, day, self.name)
         return message
 
     def cur_message_risk_update(self, day, old_risk, sent_at, RiskModel):

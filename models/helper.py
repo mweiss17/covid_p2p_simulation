@@ -13,7 +13,8 @@ def messages_to_np(human):
             # TODO: take an average over the risks for that day
             if not any(messages):
                 continue
-            ms_enc.append([cluster_id, decode_message(messages[0]).risk, len(messages), day])
+            ms = decode_message(messages[0])
+            ms_enc.append([cluster_id, ms.new_risk, ms.risk, day])
     return np.array(ms_enc)
 
 def candidate_exposures(human, date):

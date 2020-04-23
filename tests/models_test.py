@@ -48,9 +48,7 @@ class ModelsPreprocessingTest(unittest.TestCase):
             days_output = glob.glob(f"{preprocess_d}/daily_outputs/*/")
             days_output.sort()
 
-            # TODO: Fix this test which is failing because preprocessing doesn't produce
-            #  the right number of days apparently
-            # self.assertEqual(len(days_output), n_days)
+            self.assertEqual(len(days_output), n_days)
 
             output = [None] * len(days_output)
             for day_output in days_output:
@@ -60,10 +58,11 @@ class ModelsPreprocessingTest(unittest.TestCase):
                 for pkl in pkls:
                     with open(pkl, 'rb') as f:
                         day_humans.append(pickle.load(f))
-                # TODO: Fix this test which is failing because simulation or preprocessing
-                #  don't produce the right number of humans apparently
-                # self.assertEqual(len(day_humans), n_people)
+                self.assertGreaterEqual(len(day_humans), n_people)
                 output[day_humans[0]['current_day']] = day_humans
+
+            for i in range(1, len(output)):
+                self.assertEqual(len(output[i-1]), len(output[i]))
 
             stats = {'human_enc_ids': [0] * 256,
                      'humans': {}}
@@ -72,6 +71,7 @@ class ModelsPreprocessingTest(unittest.TestCase):
                 for h_i, human in enumerate(day_output):
                     stats['humans'].setdefault(h_i, {})
                     stats['humans'][h_i].setdefault('candidate_encounters_cnt', 0)
+                    stats['humans'][h_i].setdefault('updated_encounters_cnt', 0)
                     stats['humans'][h_i].setdefault('has_exposure_day', 0)
                     stats['humans'][h_i].setdefault('has_infectious_day', 0)
                     stats['humans'][h_i].setdefault('has_recovery_day', 0)
@@ -96,8 +96,10 @@ class ModelsPreprocessingTest(unittest.TestCase):
                     self.assertEqual(observed['reported_symptoms'].shape, (14, 12))
                     if observed['candidate_encounters'].size:
                         stats['humans'][h_i]['candidate_encounters_cnt'] += 1
+                        stats['humans'][h_i]['updated_encounters_cnt'] += (observed['candidate_encounters'][:, 1] !=
+                                                                           observed['candidate_encounters'][:, 2]).sum()
                         # candidate_encounters[:, 0] is the other human 8 bits id
-                        # candidate_encounters[:, 1] is the new 4 bits risk of getting contaminated during the encounter
+                        # candidate_encounters[:, 1] is the 4 bits new risk of getting contaminated during the encounter
                         # candidate_encounters[:, 2] is the 4 bits risk of getting contaminated during the encounter
                         # candidate_encounters[:, 3] is the number of days since the encounter
                         self.assertEqual(observed['candidate_encounters'].shape[1], 4)
@@ -105,9 +107,7 @@ class ModelsPreprocessingTest(unittest.TestCase):
                         self.assertLess(observed['candidate_encounters'][:, 0].max(), 256)
                         self.assertLess(observed['candidate_encounters'][:, 1].max(), 16)
                         self.assertGreaterEqual(observed['candidate_encounters'][:, 1].min(), 0)
-                        # TODO: Tix this test which is failing because observed['candidate_encounters'][:, 2] as apparently
-                        #  bigger than a 4 bits integer
-                        # self.assertLess(observed['candidate_encounters'][:, 2].max(), 16)
+                        self.assertLess(observed['candidate_encounters'][:, 2].max(), 16)
                         self.assertGreaterEqual(observed['candidate_encounters'][:, 2].min(), 0)
                         self.assertLess(observed['candidate_encounters'][:, 3].max() -
                                         observed['candidate_encounters'][:, 3].min(), 14)
@@ -205,7 +205,7 @@ class ModelsPreprocessingTest(unittest.TestCase):
                         # TODO: Fix this test which is failing because some reported symptoms appear in the history.
                         #  This might be expected if this is resulting from an update message
                         # self.assertTrue((observed['reported_symptoms'][1:] == prev_observed['reported_symptoms'][:13]).all())
-                        if observed['candidate_encounters'].size:
+                        if observed['candidate_encounters'].size and prev_observed['candidate_encounters'].size:
                             self.assertTrue((observed['candidate_encounters'][
                                                  observed['candidate_encounters'][:, 3] < current_day # Get the last 13 days excluding today
                                              ] ==
@@ -236,3 +236,5 @@ class ModelsPreprocessingTest(unittest.TestCase):
                         self.assertTrue((unobserved['true_preexisting_conditions'] == prev_unobserved['true_preexisting_conditions']).all())
                         self.assertEqual(unobserved['true_age'], prev_unobserved['true_age'])
                         self.assertEqual(unobserved['true_sex'], prev_unobserved['true_sex'])
+
+            print(stats)

@@ -72,14 +72,22 @@ def recovered_array(human_recovered_timestamp, date):
     return is_recovered, recovery_day
 
 
-def get_test_result_array(human_test_time, date):
+def get_test_result_array(test_results, date):
     # identical to human.get_test_result_array
     results = np.zeros(14)
-    result_day = (date - human_test_time).days
-    if result_day >= 0 and result_day < 14:
-        # TODO: add if human test results "negative" -1
-        results[result_day] = 1
-    return results
+    for test_result, test_time in reversed(test_results):
+        result_day = (date - test_time).days
+        if result_day >= 0 and result_day < 14:
+            results[result_day] = test_result
+
+# TODO: negative should probably return 0 and None return -1 to be consistent with encoded age and sex
+def encode_test_result(test_result):
+    if test_result is None:
+        return 0
+    if test_result.lower() == 'positive':
+        return 1
+    elif test_result.lower() == 'negative':
+        return -1
 
 
 def messages_to_np(human):

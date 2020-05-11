@@ -106,9 +106,9 @@ class ModelsTest(unittest.TestCase):
 
                     # Has received a positive test result [index] days before today
                     self.assertEqual(observed['test_results'].shape, (14,))
-                    self.assertIn(observed['test_results'].min(), (0, 1))
-                    self.assertIn(observed['test_results'].max(), (0, 1))
-                    self.assertIn(observed['test_results'].sum(), (0, 1))
+                    self.assertIn(observed['test_results'].min(), (-1., 0.))
+                    self.assertIn(observed['test_results'].max(), (0., 1.))
+                    self.assertIn(observed['test_results'].sum(), (-1., 0., 1.))
 
                     # Multihot encoding
                     self.assertIn(observed['preexisting_conditions'].min(), (0, 1))

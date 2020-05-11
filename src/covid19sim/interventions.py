@@ -6,7 +6,7 @@ import numpy as np
 
 from covid19sim.configs.constants import BIG_NUMBER
 from covid19sim.configs.config import RHO, GAMMA, MANUAL_TRACING_P_CONTACT,\
-    RISK_TRANSMISSION_PROBA, DEFAULT_DISTANCE
+    RISK_TRANSMISSION_PROBA, DEFAULT_DISTANCE, BASELINE_RISK_VALUE
 from covid19sim.models.run import integrated_risk_pred
 from covid19sim.configs.exp_config import ExpConfig
 
@@ -619,7 +619,8 @@ class Tracing(object):
             r_up, v_up, r_down, v_down = r
             r_score = 2*v_up - v_down
             risk = 1.0 - (1.0 - RISK_TRANSMISSION_PROBA) ** (t + 0.5*s + r_score)
-
+        else:
+            risk = BASELINE_RISK_VALUE
         return risk
 
     def update_human_risks(self, **kwargs):

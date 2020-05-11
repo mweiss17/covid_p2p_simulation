@@ -113,7 +113,7 @@ class City(simpy.Environment):
         self.start_time = start_time
         self.last_date_to_check_tests = self.env.timestamp.date()
         self.test_count_today = defaultdict(int)
-        self.test_type_preference = list(zip(*sorted(TEST_TYPES.items(), key=lambda x:x[1]['preference'])))[0]
+        self.test_type_preference = list(zip(*sorted(ExpConfig.get('TEST_TYPES').items(), key=lambda x:x[1]['preference'])))[0]
         print("Initializing locations ...")
         self.initialize_locations()
 
@@ -186,7 +186,7 @@ class City(simpy.Environment):
             self.last_date_to_check_tests = self.env.timestamp.date()
             for k in self.test_count_today.keys():
                 self.test_count_today[k] = 0
-        return any(self.test_count_today[test_type] < TEST_TYPES[test_type]['capacity'] for test_type in self.test_type_preference)
+        return any(self.test_count_today[test_type] < ExpConfig.get('TEST_TYPES')[test_type]['capacity'] for test_type in self.test_type_preference)
 
     def get_available_test(self):
         """
@@ -199,7 +199,7 @@ class City(simpy.Environment):
             str: available test_type
         """
         for test_type in self.test_type_preference:
-            if self.test_count_today[test_type] < TEST_TYPES[test_type]['capacity']:
+            if self.test_count_today[test_type] < ExpConfig.get('TEST_TYPES')[test_type]['capacity']:
                 self.test_count_today[test_type] += 1
                 return test_type
 
@@ -433,7 +433,6 @@ class City(simpy.Environment):
                 human.update_reported_symptoms()
                 human.update_risk(symptoms=human.symptoms)
                 human.infectiousnesses.appendleft(calculate_average_infectiousness(human))
-
                 Event.log_daily(human, human.env.timestamp)
                 self.tracker.track_symptoms(human)
 

@@ -171,6 +171,7 @@ class Human(object):
         self.incubation_days = None # self.infectiousness_onset_days + self.viral_load_plateau_start + self.rng.normal(loc=SYMPTOM_ONSET_WRT_VIRAL_LOAD_PEAK_AVG, scale=SYMPTOM_ONSET_WRT_VIRAL_LOAD_PEAK_STD)
         self.recovery_days = None # self.infectiousness_onset_days + self.viral_load_recovered
         self.test_result, self.test_type = None, None
+        self.test_results = deque(((None, datetime.datetime.max),))
         self.infection_timestamp = infection_timestamp
         self.initial_viral_load = self.rng.rand() if infection_timestamp is not None else 0
         if self.infection_timestamp is not None:
@@ -617,9 +618,6 @@ class Human(object):
         Returns:
             [type]: [description]
         """
-        # TODO: symptoms should not be updated here.
-        #  Explicit call to Human.update_symptoms() should be required
-        self.update_symptoms()
         return self.rolling_all_symptoms[0]
 
     @property
@@ -632,10 +630,6 @@ class Human(object):
         """
         if not self.has_app:
             return []
-
-        # TODO: symptoms should not be updated here.
-        #  Explicit call to Human.update_reported_symptoms() should be required
-        self.update_reported_symptoms()
         return self.rolling_all_reported_symptoms[0]
 
     def update_symptoms(self):
@@ -672,22 +666,15 @@ class Human(object):
             self.allergy_symptoms = self.allergy_progression[0]
 
         all_symptoms = set(self.flu_symptoms + self.cold_symptoms + self.allergy_symptoms + self.covid_symptoms)
-        # self.new_symptoms = list(all_symptoms - set(self.all_symptoms))
         # TODO: remove self.all_symptoms in favor of self.rolling_all_symptoms[0]
         self.all_symptoms = list(all_symptoms)
 
         self.rolling_all_symptoms.appendleft(self.all_symptoms)
 
-        # Keep reported symptoms in sync
-        # TODO: Inconsistency could come from Human.symptoms being accessed instead of Human.all_symptoms
-        self.update_reported_symptoms()
-
     def update_reported_symptoms(self):
         """
         [summary]
         """
-        self.update_symptoms()
-
         if self.last_date['reported_symptoms'] == self.env.timestamp.date():
             return
 
@@ -718,8 +705,7 @@ class Human(object):
 
     def get_tested(self, city, source="illness"):
         """
-        [summary]
-
+        Applies the logic of testing on this person
         Args:
             city ([type]): [description]
             source (str, optional): [description]. Defaults to "illness".
@@ -728,15 +714,16 @@ class Human(object):
             [type]: [description]
         """
         if not city.tests_available:
+            print("not city.tests_available")
             return False
 
         # TODO: get observed data on testing / who gets tested when??
         if any(self.symptoms) and self.rng.rand() < P_TEST:
             self.test_type = city.get_available_test()
-            if self.rng.rand() < TEST_TYPES[self.test_type]['P_FALSE_NEGATIVE']:
-                self.test_result =  'negative'
+            if self.rng.rand() < ExpConfig.get('TEST_TYPES')[self.test_type]['P_FALSE_NEGATIVE']:
+                self.test_result = 'negative'
             else:
-                self.test_result =  'positive'
+                self.test_result = 'positive'
 
             if self.test_type == "lab":
                 self.test_result_validated = True
@@ -1533,7 +1520,7 @@ class Human(object):
         if self.test_result == "positive":
             self.risk_history_map[cur_day] = 1.0
         elif self.test_result == "negative":
-            # TODO:  Risk because of negaitve results should not go down to 0.20. It should be max(o.2, current_risk). It should also depend on the test_type
+            # TODO:  Risk because of negaitve results should not go down to 0.20. It should be max(0.2, current_risk). It should also depend on the test_type
             self.risk_history_map[cur_day] = 0.2
 
         if cur_day in self.risk_history_map:

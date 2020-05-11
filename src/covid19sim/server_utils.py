@@ -432,10 +432,7 @@ def proc_human(params, inference_engine=None):
             inference_result = inference_engine.infer(daily_output)
         except InvalidSetSize:
             pass  # return None for invalid samples
-        except RuntimeError as error:
-            # TODO: ctt.modules.HealthHistoryEmbedding can fail with :
-            #  size mismatch, m1: [14 x 29], m2: [13 x 128]
-            warnings.warn(str(error), RuntimeWarning)
+
     human['risk_history'] = None
     if inference_result is not None:
         # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
